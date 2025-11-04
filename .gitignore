@@ -1,0 +1,14 @@
+# datos y derivados
+data/raw/*.tmp
+*.parquet
+
+# notebooks
+.ipynb_checkpoints/
+
+# python
+__pycache__/
+*.pyc
+
+# entornos y secretos
+.env
+.venv/
