@@ -1,10 +1,13 @@
-,modelo,params,split,MAE,RMSE
-consumo_materia_kg_target,ridge,{'alpha': 10.0},test_ridge,660.0175433259034,1712.5512185191844
-kg_scrap_target,ridge,{'alpha': 10.0},test_ridge,2.9337868864164214e-14,1.7604940177405533e-13
-horas_fabricacion_target,ridge,{'alpha': 10.0},test_ridge,1.6579699074304186,2.330264462330802
-consumo_materia_kg_target,random_forest,"{'n_estimators': 400, 'max_depth': 20}",test_random_forest,14.8425487188695,275.15381329390044
-kg_scrap_target,random_forest,"{'n_estimators': 400, 'max_depth': 20}",test_random_forest,1.5574493216299853e-14,1.789657169035366e-13
-horas_fabricacion_target,random_forest,"{'n_estimators': 400, 'max_depth': 20}",test_random_forest,0.0926567133844216,0.40064800521134936
-consumo_materia_kg_target,gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",test_gbr,16.383125893592904,60.04129961784929
-kg_scrap_target,gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",test_gbr,1.563062304279696e-14,1.7896556960385132e-13
-horas_fabricacion_target,gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",test_gbr,0.1509015515582827,0.4508707691665744
+target,modelo,params,split,MAE,RMSE,MAPE
+consumo_materia_kg_target,ridge,{'alpha': 10.0},test_ridge,1105.123883924662,1793.318899977697,12.895386342357
+kg_scrap_target,ridge,{'alpha': 10.0},test_ridge,5.0131652207234254e-14,1.228567481061818e-13,5.013165220723426e-08
+horas_fabricacion_target,ridge,{'alpha': 10.0},test_ridge,2.2770727057148035,2.6760552163344555,3.939941704976473
+consumo_materia_kg_target,random_forest,"{'n_estimators': 200, 'max_depth': None}",test_random_forest,627.816846371503,1335.8364700824773,2.6057441652940927
+kg_scrap_target,random_forest,"{'n_estimators': 200, 'max_depth': None}",test_random_forest,1.798624667300019e-14,1.1722213130084576e-13,1.7986246673000193e-08
+horas_fabricacion_target,random_forest,"{'n_estimators': 200, 'max_depth': None}",test_random_forest,2.0700676031294454,2.556121729735243,2.576479312436322
+consumo_materia_kg_target,gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}",test_gbr,648.643629426155,1319.3773094105259,4.141189168351891
+kg_scrap_target,gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}",test_gbr,1.8042326657564586e-14,1.172231694954654e-13,1.8042326657564586e-08
+horas_fabricacion_target,gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}",test_gbr,2.13721316903323,2.5563335607936435,3.0112327427061483
+consumo_materia_kg_target,torch_mlp,"{'hidden': [256, 128], 'dropout': 0.1, 'epochs': 40, 'lr': 0.001, 'batch_size': 256, 'weight_decay': 1e-05}",test_torch_mlp,843.0823925801218,1741.1174161373626,3.6505892938241895
+kg_scrap_target,torch_mlp,"{'hidden': [256, 128], 'dropout': 0.1, 'epochs': 40, 'lr': 0.001, 'batch_size': 256, 'weight_decay': 1e-05}",test_torch_mlp,5.889188515321803,7.7789666211361945,5889188.515321803
+horas_fabricacion_target,torch_mlp,"{'hidden': [256, 128], 'dropout': 0.1, 'epochs': 40, 'lr': 0.001, 'batch_size': 256, 'weight_decay': 1e-05}",test_torch_mlp,3.9039077595826606,5.139891680228481,8.032790651571013
