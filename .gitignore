@@ -1,6 +1,7 @@
 # datos y derivados
 data/raw/*.tmp
 *.parquet
+data/proccessed
 
 # notebooks
 .ipynb_checkpoints/

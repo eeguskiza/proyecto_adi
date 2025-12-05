@@ -1,0 +1,10 @@
+,modelo,params,split,MAE,RMSE
+consumo_materia_kg_target,ridge,{'alpha': 10.0},test_ridge,660.0175433259034,1712.5512185191844
+kg_scrap_target,ridge,{'alpha': 10.0},test_ridge,2.9337868864164214e-14,1.7604940177405533e-13
+horas_fabricacion_target,ridge,{'alpha': 10.0},test_ridge,1.6579699074304186,2.330264462330802
+consumo_materia_kg_target,random_forest,"{'n_estimators': 400, 'max_depth': 20}",test_random_forest,14.8425487188695,275.15381329390044
+kg_scrap_target,random_forest,"{'n_estimators': 400, 'max_depth': 20}",test_random_forest,1.5574493216299853e-14,1.789657169035366e-13
+horas_fabricacion_target,random_forest,"{'n_estimators': 400, 'max_depth': 20}",test_random_forest,0.0926567133844216,0.40064800521134936
+consumo_materia_kg_target,gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",test_gbr,16.383125893592904,60.04129961784929
+kg_scrap_target,gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",test_gbr,1.563062304279696e-14,1.7896556960385132e-13
+horas_fabricacion_target,gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",test_gbr,0.1509015515582827,0.4508707691665744

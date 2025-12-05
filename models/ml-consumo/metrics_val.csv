@@ -1,0 +1,28 @@
+modelo,params,split,MAE,RMSE
+ridge,{'alpha': 0.1},val_ridge,674.5648759658388,1910.503749104877
+ridge,{'alpha': 0.1},val_ridge,3.2836953107264385e-14,2.025320057897257e-13
+ridge,{'alpha': 0.1},val_ridge,1.7319299222896856,2.4733688161586227
+ridge,{'alpha': 1.0},val_ridge,675.037798290074,1908.998215168891
+ridge,{'alpha': 1.0},val_ridge,3.2817535044232335e-14,2.0254473205614331e-13
+ridge,{'alpha': 1.0},val_ridge,1.731586535148877,2.4732871651717923
+ridge,{'alpha': 10.0},val_ridge,675.207272138745,1904.425576856964
+ridge,{'alpha': 10.0},val_ridge,3.263153536952296e-14,2.026174943885824e-13
+ridge,{'alpha': 10.0},val_ridge,1.7304856170614742,2.472417811673126
+random_forest,"{'n_estimators': 200, 'max_depth': None}",val_random_forest,14.009664275096933,127.77712592834129
+random_forest,"{'n_estimators': 200, 'max_depth': None}",val_random_forest,2.0293714500832044e-14,2.0756826820067435e-13
+random_forest,"{'n_estimators': 200, 'max_depth': None}",val_random_forest,0.12216131048099252,0.6334141984789001
+random_forest,"{'n_estimators': 200, 'max_depth': 10}",val_random_forest,17.106015789969085,137.06302876674107
+random_forest,"{'n_estimators': 200, 'max_depth': 10}",val_random_forest,2.0263456086388747e-14,2.075683465602519e-13
+random_forest,"{'n_estimators': 200, 'max_depth': 10}",val_random_forest,0.1895365186672853,0.6701598702301459
+random_forest,"{'n_estimators': 400, 'max_depth': 20}",val_random_forest,13.976946464815889,123.36327203594706
+random_forest,"{'n_estimators': 400, 'max_depth': 20}",val_random_forest,2.0347808810856865e-14,2.0756814032539447e-13
+random_forest,"{'n_estimators': 400, 'max_depth': 20}",val_random_forest,0.1225521587406376,0.6186737998375126
+gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}",val_gbr,52.76327152650902,139.19914688948606
+gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}",val_gbr,2.035094009907183e-14,2.0756813340279404e-13
+gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}",val_gbr,0.2637891854518286,0.7661831743702727
+gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",val_gbr,17.558459987778214,71.91133939350954
+gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",val_gbr,2.0350940099071827e-14,2.0756813340279404e-13
+gbr,"{'n_estimators': 500, 'learning_rate': 0.05, 'max_depth': 4}",val_gbr,0.17543245873257954,0.6467482964765354
+gbr,"{'n_estimators': 300, 'learning_rate': 0.1, 'max_depth': 3}",val_gbr,31.041102687729882,106.00837006852676
+gbr,"{'n_estimators': 300, 'learning_rate': 0.1, 'max_depth': 3}",val_gbr,2.0350940099071837e-14,2.0756813340279404e-13
+gbr,"{'n_estimators': 300, 'learning_rate': 0.1, 'max_depth': 3}",val_gbr,0.21130869210409742,0.6893035180746706
