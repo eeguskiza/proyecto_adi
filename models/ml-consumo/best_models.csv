@@ -1,5 +1,0 @@
-modelo,params
-ridge,{'alpha': 10.0}
-random_forest,"{'n_estimators': 200, 'max_depth': None}"
-gbr,"{'n_estimators': 300, 'learning_rate': 0.05, 'max_depth': 3}"
-torch_mlp,"{'hidden': [256, 128], 'dropout': 0.1, 'epochs': 40, 'lr': 0.001, 'batch_size': 256, 'weight_decay': 1e-05}"
