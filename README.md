@@ -120,3 +120,29 @@ Una fila = **registro de operación** en una máquina y periodo concreto. Incluy
 * `lead_time_al_almacen_dias` no es tiempo a cliente, solo a stock.
 * Ciclo teórico no disponible; usar `throughput_uph` histórico como proxy.
 * Operario no incluido para evitar PII.
+
+## Dashboard Streamlit
+
+Panel interactivo multi-página (`app.py`) que usa los datos `data/raw/` para exploración rápida.
+
+### Qué muestra
+- **Cuadro de mando general:** KPIs (piezas OK/scrap, tasa scrap, órdenes, kg MP, horas) y series de producción/scrap, entradas de MP, productividad.
+- **Producción:** tabla por orden+operación, agregados por máquina/referencia/turno, heatmap scrap%, histograma, y formulario para probar el modelo de scrap (BentoML).
+- **Almacén MP:** entradas por referencia/tiempo, kg y lotes, consumo teórico y stock teórico aproximado.
+- **RRHH:** tabla mensual, horas netas, ausencias y productividad piezas OK/horas.
+- **Modelos IA / BentoML:** formulario de scrap y sección de cambio de fresa con riesgos y distribución de piezas entre cambios.
+
+### Cómo lanzarlo
+1. Instala dependencias:
+   ```
+   pip install -r requirements.txt
+   ```
+2. Ejecuta Streamlit desde la raíz del repo:
+   ```
+   streamlit run app.py
+   ```
+   Opcional: `--server.port 8501` para fijar puerto.
+
+### Notas de uso
+- Los filtros globales del sidebar (rango de fechas, planta, familia, máquina, referencia) se aplican en todas las páginas.
+- El endpoint del modelo de scrap se puede configurar en el formulario (por defecto `http://localhost:3000/predict`).
