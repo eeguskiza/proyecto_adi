@@ -14,15 +14,21 @@ def page_produccion(filtered: dict) -> None:
     prod = prod.copy()
     prod["kg_ok"] = prod["piezas_ok"] * prod["peso_neto_kg"].fillna(0)
 
-    total_ok = int(prod["piezas_ok"].sum())
-    total_scrap = int(prod["piezas_scrap"].sum())
+    # Evita sobrecontar piezas al sumar todas las operaciones: tomamos la última operación con piezas>0 por OF.
+    prod_valid = prod[prod["total_piezas"] > 0].sort_values("ts_fin")
+    of_final = prod_valid.groupby("work_order_id").tail(1)
+
+    total_ok = int(of_final["piezas_ok"].sum())
+    total_scrap = int(of_final["piezas_scrap"].sum())
     total_piezas = total_ok + total_scrap
     scrap_rate_total = total_scrap / total_piezas if total_piezas > 0 else np.nan
-    dur_total_min = prod["duracion_min"].sum()
+
+    dur_total_min = prod[prod["evento"].str.lower() == "producción"]["duracion_min"].sum()
     uph_real = total_ok / (dur_total_min / 60) if dur_total_min > 0 else np.nan
+
     ordenes_activas = prod["work_order_id"].nunique()
     ops_activas = prod["op_id"].nunique()
-    kg_ok = prod["kg_ok"].sum()
+    kg_ok = (of_final["piezas_ok"] * of_final["peso_neto_kg"].fillna(0)).sum()
 
     k1, k2, k3, k4 = st.columns(4)
     k1.metric("Piezas OK", f"{total_ok:,}")

@@ -117,7 +117,11 @@ def get_filters(data: Dict[str, pd.DataFrame]) -> Dict[str, object]:
     resumen_df["total_piezas"] = resumen_df[["piezas_ok", "piezas_scrap"]].sum(axis=1)
     refs_clean = resumen_df["ref_id_str"].dropna().astype(str).str.zfill(6)
     refs_in_range = sorted([r for r in refs_clean if r.isdigit()])
-    piezas_range = int(resumen_df["total_piezas"].sum())
+
+    # Evita sobrecontar piezas cuando una OF tiene varias operaciones: tomamos la última operación con piezas>0 por OF.
+    resumen_valid = resumen_df[resumen_df["total_piezas"] > 0].sort_values("ts_fin")
+    of_final = resumen_valid.groupby("work_order_id").tail(1)
+    piezas_range = int(of_final["total_piezas"].sum())
     st.sidebar.markdown(
         f"<div style='font-weight:700;'>Referencias en rango:</div><div style='font-size:0.95rem;'>{', '.join(refs_in_range[:8])}{'…' if len(refs_in_range)>8 else ''}</div>",
         unsafe_allow_html=True,
