@@ -86,12 +86,17 @@ def compute_oee(prod: pd.DataFrame, ciclos: pd.DataFrame) -> Dict[str, object]:
     prod_prod = prod_prod[prod_prod["piezas_hora_teorico"] > 0]
     prod_prod.loc[:, "ideal_piezas"] = prod_prod["piezas_hora_teorico"] * (prod_prod["duracion_min"] / 60)
     ideal_output = prod_prod["ideal_piezas"].sum()
-    actual_output = prod_prod["total_piezas"].sum()
+
+    # Evita sobrecontar piezas: usamos la última operación con piezas>0 por orden.
+    prod_valid = prod_prod[prod_prod["total_piezas"] > 0].sort_values("ts_fin")
+    prod_last = prod_valid.groupby("work_order_id").tail(1)
+
+    actual_output = prod_last["total_piezas"].sum()
     performance = actual_output / ideal_output if ideal_output > 0 and actual_output > 0 else np.nan
     uph_real = actual_output / (dur_prod / 60) if dur_prod > 0 else np.nan
 
-    total_ok = int(prod["piezas_ok"].sum())
-    total_scrap = int(prod["piezas_scrap"].sum())
+    total_ok = int(prod_last["piezas_ok"].sum())
+    total_scrap = int(prod_last["piezas_scrap"].sum())
     total_piezas = total_ok + total_scrap
     quality = total_ok / total_piezas if total_piezas > 0 else np.nan
 
