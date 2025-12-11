@@ -10,7 +10,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
     almacen = filtered.get("almacen", pd.DataFrame())
     prod = filtered.get("produccion", pd.DataFrame())
 
-    # --- INICIO CORRECCIONES DE DATOS ---
+    # Correciones
     if not compras.empty:
         compras["fecha_recepcion_ts"] = pd.to_datetime(compras["fecha_recepcion_ts"])
         compras["qty_recibida"] = pd.to_numeric(compras["qty_recibida"], errors="coerce").fillna(0)
@@ -18,19 +18,17 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
             compras["ref_materia_str"] = compras["ref_materia"].astype(str)
     
     if not prod.empty:
-        # Aseguramos que sea string y quitamos decimales (.0) si existen
         prod["ref_id_str"] = prod["ref_id"].astype(str).str.replace(r'\.0$', '', regex=True)
 
     if not refs.empty:
         refs["ref_id_str"] = refs["ref_id"].astype(str)
         refs["peso_neto_kg"] = pd.to_numeric(refs["peso_neto_kg"], errors="coerce").fillna(0)
-    # --- FIN CORRECCIONES ---
 
     if compras.empty and almacen.empty:
         st.info("Sin datos de almacén en el rango seleccionado.")
         return
 
-    # --- KPI SUPERIORES ---
+    # KPI SUPERIORES 
     col1, col2, col3 = st.columns(3)
     
     kg_recibidos = compras["qty_recibida"].sum() if not compras.empty else 0
@@ -47,7 +45,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
     kg_consumidos = prod_ref["kg_consumidos"].sum()
     col3.metric("Kg consumo teórico", f"{kg_consumidos:,.0f}")
 
-    # --- GRÁFICOS ORIGINALES DE COMPRAS ---
+    # Graficos de compras
     c1, c2 = st.columns(2)
     if not compras.empty:
         top_ref = compras.groupby("ref_materia_str")["qty_recibida"].sum().reset_index()
@@ -59,7 +57,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
         fig_ts = px.area(ts, x="fecha", y="qty_recibida", color="ref_materia_str", title="Serie de kg recibidos")
         c2.plotly_chart(fig_ts, use_container_width=True)
 
-    # --- GRÁFICO ORIGINAL DE CONSUMO Y TABLA ---
+    # Grafico original de consumo y tabla
     if not prod_ref.empty:
         cons_ref = prod_ref.groupby("ref_id_str")["kg_consumidos"].sum().reset_index()
         # Aqui ordenamos por consumo para el grafico de barras original
@@ -79,10 +77,10 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
     st.markdown("---")
     st.subheader("Eficiencia y Estrategia de Compras")
 
-    # --- NUEVOS GRÁFICOS (SCRAP Y SCATTER) ---
+    # Graficos de scrap y scatter
     c3, c4 = st.columns(2)
 
-    # 1. Gráfico de Scrap (Vertical, Eje X Categórico)
+    # Gráfico de scrap
     if not prod_ref.empty:
         prod_ref["kg_scrap"] = prod_ref["piezas_scrap"] * prod_ref.get("peso_neto_kg", 0).fillna(0)
         scrap_by_ref = prod_ref.groupby("ref_id_str")["kg_scrap"].sum().reset_index()
@@ -92,16 +90,15 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
         if not scrap_by_ref.empty:
             fig_scrap = px.bar(
                 scrap_by_ref, 
-                x="ref_id_str", # Eje X: Referencias
-                y="kg_scrap",   # Eje Y: Kilos
+                x="ref_id_str", 
+                y="kg_scrap",   
                 title="Top 10: Desperdicio de material (Kg Scrap)",
                 labels={"kg_scrap": "Kg Desperdiciados", "ref_id_str": "Referencia PT"}
             )
-            # FIX: Forzar que el eje X sea categórico (clases) y no numérico
             fig_scrap.update_xaxes(type='category')
             c3.plotly_chart(fig_scrap, use_container_width=True)
 
-    # 2. Gráfico de Dispersión de Lotes (Scatter)
+    # Grafico de scatter
     if not compras.empty:
         compras_validas = compras[compras["qty_recibida"] > 0].copy()
         if not compras_validas.empty:
