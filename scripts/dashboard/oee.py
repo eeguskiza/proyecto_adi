@@ -117,6 +117,45 @@ def compute_oee(prod: pd.DataFrame, ciclos: pd.DataFrame) -> Dict[str, object]:
     }
 
 
+def compute_oee_daily(prod: pd.DataFrame, ciclos: pd.DataFrame) -> pd.DataFrame:
+    """Calcula OEE día a día para análisis de tendencias."""
+    if prod.empty:
+        return pd.DataFrame()
+
+    prod = prod.copy()
+    prod["estado_oee"] = prod["evento"].str.lower().map(
+        {"producción": "produccion", "produccion": "produccion", "preparación": "preparacion", "preparacion": "preparacion"}
+    )
+    prod["estado_oee"] = prod["estado_oee"].fillna("incidencia")
+    prod["fecha"] = prod["ts_ini"].dt.date
+
+    daily_oee = []
+    for fecha in prod["fecha"].unique():
+        prod_day = prod[prod["fecha"] == fecha]
+        oee_day = compute_oee(prod_day, ciclos)
+        daily_oee.append({
+            "fecha": fecha,
+            "oee": oee_day["oee"],
+            "availability": oee_day["availability"],
+            "performance": oee_day["performance"],
+            "quality": oee_day["quality"],
+        })
+
+    return pd.DataFrame(daily_oee).sort_values("fecha")
+
+
+def get_kpi_color(value: float, thresholds: Dict[str, float]) -> str:
+    """Determina el color del KPI según thresholds (verde/amarillo/rojo)."""
+    if pd.isna(value):
+        return "#4b5563"  # gris
+    if value >= thresholds.get("good", 0.85):
+        return "#22c55e"  # verde
+    elif value >= thresholds.get("warning", 0.75):
+        return "#fbbf24"  # amarillo
+    else:
+        return "#ef4444"  # rojo
+
+
 def render_kpi_cards(oee_data: Dict[str, object]) -> None:
     inject_metric_styles()
     availability = oee_data["availability"]
@@ -126,32 +165,44 @@ def render_kpi_cards(oee_data: Dict[str, object]) -> None:
     piezas_total = oee_data.get("total_piezas", 0)
     uph_real = oee_data.get("uph_real", np.nan)
 
+    # Thresholds para cada KPI
+    oee_color = get_kpi_color(oee, {"good": 0.75, "warning": 0.60})
+    disp_color = get_kpi_color(availability, {"good": 0.85, "warning": 0.75})
+    perf_color = get_kpi_color(performance, {"good": 0.90, "warning": 0.80})
+    qual_color = get_kpi_color(quality, {"good": 0.97, "warning": 0.95})
+
     st.markdown(
         """
         <div class="metric-grid">
-            <div class="metric-card">
+            <div class="metric-card" style="border-left: 4px solid {oee_color};">
                 <div class="metric-label">OEE</div>
-                <div class="metric-value">{oee_val}</div>
+                <div class="metric-value" style="color: {oee_color};">{oee_val}</div>
+                <div class="metric-sub">Objetivo: ≥75%</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left: 4px solid {disp_color};">
                 <div class="metric-label">Disponibilidad</div>
-                <div class="metric-value">{disp_val}</div>
+                <div class="metric-value" style="color: {disp_color};">{disp_val}</div>
+                <div class="metric-sub">Objetivo: ≥85%</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left: 4px solid {perf_color};">
                 <div class="metric-label">Rendimiento</div>
-                <div class="metric-value">{perf_val}</div>
+                <div class="metric-value" style="color: {perf_color};">{perf_val}</div>
+                <div class="metric-sub">Objetivo: ≥90%</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card" style="border-left: 4px solid {qual_color};">
                 <div class="metric-label">Calidad</div>
-                <div class="metric-value">{qual_val}</div>
+                <div class="metric-value" style="color: {qual_color};">{qual_val}</div>
+                <div class="metric-sub">Objetivo: ≥97%</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">Piezas rango</div>
                 <div class="metric-value">{piezas_val}</div>
+                <div class="metric-sub">OK: {piezas_ok}</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">UPH real (prod)</div>
                 <div class="metric-value">{uph_val}</div>
+                <div class="metric-sub">Piezas/hora</div>
             </div>
         </div>
         """.format(
@@ -160,7 +211,12 @@ def render_kpi_cards(oee_data: Dict[str, object]) -> None:
             perf_val=f"{performance:.1%}" if pd.notna(performance) else "—",
             qual_val=f"{quality:.1%}" if pd.notna(quality) else "—",
             piezas_val=f"{piezas_total:,}",
+            piezas_ok=f"{oee_data['total_ok']:,}",
             uph_val=f"{uph_real:,.1f}" if pd.notna(uph_real) else "—",
+            oee_color=oee_color,
+            disp_color=disp_color,
+            perf_color=perf_color,
+            qual_color=qual_color,
         ),
         unsafe_allow_html=True,
     )
