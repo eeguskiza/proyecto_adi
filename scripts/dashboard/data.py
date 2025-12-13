@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
+import streamlit as st
 
 
 def map_turno(ts: pd.Timestamp) -> str:
@@ -16,6 +17,7 @@ def map_turno(ts: pd.Timestamp) -> str:
     return "noche"
 
 
+@st.cache_data(ttl=300, show_spinner="Cargando datos...")
 def load_data() -> Dict[str, pd.DataFrame]:
     refs = pd.read_csv("data/raw/datos_referencias.csv")
     refs["ref_id_str"] = refs["ref_id"].astype(str).str.zfill(6)
@@ -94,6 +96,7 @@ def load_data() -> Dict[str, pd.DataFrame]:
     }
 
 
+@st.cache_data(show_spinner=False)
 def get_date_bounds(data: Dict[str, pd.DataFrame]) -> Tuple[dt.date, dt.date]:
     fechas = []
     for col, df in [

@@ -8,6 +8,7 @@ from scripts.dashboard.pages.dashboard_page import page_dashboard
 from scripts.dashboard.pages.modelos_page import page_modelos
 from scripts.dashboard.pages.produccion_page import page_produccion
 from scripts.dashboard.pages.rrhh_page import page_rrhh
+from scripts.dashboard.chatbot import render_chatbot_bubble
 
 
 st.set_page_config(
@@ -46,6 +47,9 @@ def main() -> None:
         page_rrhh(filtered, filtered["produccion"])
     else:
         page_modelos(filtered, filtered["produccion"])
+
+    # Renderizar chatbot flotante en todas las páginas (con datos filtrados)
+    render_chatbot_bubble(filtered, page, filtros)
 
 
 if __name__ == "__main__":
