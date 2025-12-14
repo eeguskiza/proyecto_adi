@@ -101,8 +101,7 @@ def page_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     df_features["cluster"] = df_features["cluster"].astype(str)
 
     # Mostrar métricas por cluster
-    st.markdown("---")
-    st.markdown("### 📊 Métricas por Cluster")
+    st.markdown("### Métricas por Cluster")
     
     cluster_summary = df_features.groupby("cluster").agg(
         n_maquinas=("machine_name", "count"),
@@ -136,8 +135,7 @@ def page_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     col_sum2.plotly_chart(fig_dist, width='stretch')
 
     # Visualización 3D (disponibilidad, scrap, UPH)
-    st.markdown("---")
-    st.markdown("### 🔍 Visualización 3D de Clusters")
+    st.markdown("### Visualización 3D de Clusters")
     
     fig_3d = px.scatter_3d(
         df_features,
@@ -159,8 +157,7 @@ def page_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     st.plotly_chart(fig_3d, width='stretch')
 
     # Scatter 2D: Disponibilidad vs Scrap
-    st.markdown("---")
-    st.markdown("### 📈 Gráficos 2D de Clusters")
+    st.markdown("### Gráficos 2D de Clusters")
     
     col_2d1, col_2d2 = st.columns(2)
     
@@ -195,8 +192,7 @@ def page_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     col_2d2.plotly_chart(fig_uph_scrap, width='stretch')
 
     # Tabla detallada con asignación de clusters
-    st.markdown("---")
-    st.markdown("### 🗂️ Detalle de Máquinas y Clusters")
+    st.markdown("### Detalle de Máquinas y Clusters")
     
     df_display = df_features.copy()
     df_display["cluster"] = "Cluster " + df_display["cluster"]
@@ -214,8 +210,7 @@ def page_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     )
 
     # Interpretación y recomendaciones
-    st.markdown("---")
-    st.markdown("### 💡 Interpretación")
+    st.markdown("### Interpretación")
     st.info(
         "**Cómo usar estos clusters:**\n\n"
         "- **Cluster con alta disponibilidad y bajo scrap:** Máquinas de referencia (best performers).\n"
