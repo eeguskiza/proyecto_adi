@@ -45,7 +45,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
         fig_oee_trend.add_hline(y=0.75, line_dash="dash", line_color="green", annotation_text="Objetivo 75%")
         fig_oee_trend.update_traces(line_color="#3b82f6", line_width=3)
         fig_oee_trend.update_layout(yaxis_tickformat=".0%", yaxis_range=[0, 1])
-        col_ev1.plotly_chart(fig_oee_trend, use_container_width=True)
+        col_ev1.plotly_chart(fig_oee_trend, width='stretch')
 
         # Gráfico de componentes del OEE
         daily_melted = daily_oee.melt(
@@ -69,7 +69,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
             labels={"valor": "Valor", "fecha": "Fecha", "componente": "Componente"}
         )
         fig_components.update_layout(yaxis_tickformat=".0%", yaxis_range=[0, 1])
-        col_ev2.plotly_chart(fig_components, use_container_width=True)
+        col_ev2.plotly_chart(fig_components, width='stretch')
 
     st.markdown("---")
     st.markdown("### 📊 Análisis Detallado")
@@ -107,7 +107,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
         showlegend=False,
         height=400
     )
-    col_w1.plotly_chart(fig_waterfall, use_container_width=True)
+    col_w1.plotly_chart(fig_waterfall, width='stretch')
 
     # Distribución del tiempo
     dur = oee_data["durations"]
@@ -131,7 +131,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
     )
     fig_disp.update_layout(barmode="stack", xaxis_title="Minutos", yaxis_title="", height=400)
     fig_disp.update_traces(texttemplate="%{text:.0f} min", textposition="inside")
-    col_w2.plotly_chart(fig_disp, use_container_width=True)
+    col_w2.plotly_chart(fig_disp, width='stretch')
 
     # Distribución de calidad
     calidad_df = pd.DataFrame(
@@ -142,7 +142,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
     )
     fig_calidad = px.pie(calidad_df, values="piezas", names="tipo", title="Distribución de calidad", color="tipo")
     fig_calidad.update_layout(height=400)
-    col_w3.plotly_chart(fig_calidad, use_container_width=True)
+    col_w3.plotly_chart(fig_calidad, width='stretch')
 
     prod_perf = prod[prod["estado_oee"] == "produccion"].copy()
     ciclos_ref_machine = ciclos[["ref_id_str", "machine_name", "piezas_hora_teorico"]].drop_duplicates()
@@ -301,7 +301,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
             fig_heatmap.update_traces(
                 hovertemplate="Máquina: %{y}<br>Fecha: %{x}<br>Disponibilidad: %{z:.1%}<extra></extra>"
             )
-            st.plotly_chart(fig_heatmap, use_container_width=True)
+            st.plotly_chart(fig_heatmap, width='stretch')
     else:
         st.info("El heatmap de disponibilidad solo se muestra cuando se seleccionan todas las máquinas.")
 
@@ -342,7 +342,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
             fig_turno_oee.update_traces(texttemplate="%{text:.1%}", textposition="outside")
             fig_turno_oee.update_layout(yaxis_tickformat=".0%", showlegend=False, height=350)
             fig_turno_oee.add_hline(y=0.75, line_dash="dash", line_color="green", annotation_text="Objetivo")
-            col_t1.plotly_chart(fig_turno_oee, use_container_width=True)
+            col_t1.plotly_chart(fig_turno_oee, width='stretch')
 
             # Gráfico de componentes por turno
             turnos_melted = turnos_df.melt(
@@ -363,7 +363,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
                 labels={"valor": "Valor", "turno": "Turno", "componente": "Componente"}
             )
             fig_turno_comp.update_layout(yaxis_tickformat=".0%", height=350)
-            col_t2.plotly_chart(fig_turno_comp, use_container_width=True)
+            col_t2.plotly_chart(fig_turno_comp, width='stretch')
 
     st.markdown("---")
     c3, c4 = st.columns((2, 1))
@@ -377,7 +377,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
                 labels={"value": "Piezas/hora", "variable": "Serie"},
                 title="Rendimiento real vs. ideal",
             ),
-            use_container_width=True,
+            width='stretch',
         )
     if fig_inci:
-        c4.plotly_chart(fig_inci, use_container_width=True)
+        c4.plotly_chart(fig_inci, width='stretch')

@@ -4,6 +4,7 @@ from scripts.dashboard.data import load_data
 from scripts.dashboard.filters import apply_filters, get_filters
 from scripts.dashboard.oee import inject_metric_styles
 from scripts.dashboard.pages.almacen_page import page_almacen
+from scripts.dashboard.pages.clustering_page import page_clustering
 from scripts.dashboard.pages.dashboard_page import page_dashboard
 from scripts.dashboard.pages.modelos_page import page_modelos
 from scripts.dashboard.pages.produccion_page import page_produccion
@@ -32,6 +33,7 @@ def main() -> None:
                 "Producción",
                 "Almacén MP",
                 "RRHH",
+                "Clustering",
                 "Modelos IA / BentoML",
             ],
             key="page_selector",
@@ -45,6 +47,8 @@ def main() -> None:
         page_almacen(filtered, data["refs"])
     elif page == "RRHH":
         page_rrhh(filtered, filtered["produccion"])
+    elif page == "Clustering":
+        page_clustering(filtered, data["ciclos"])
     else:
         page_modelos(filtered, filtered["produccion"])
 

@@ -33,12 +33,23 @@ def get_filters(data: Dict[str, pd.DataFrame]) -> Dict[str, object]:
             "week_label": "(Rango personalizado)",
         }
 
+    # Asegurar que el valor guardado esté dentro de los límites actuales
+    saved_range = st.session_state.filtros["date_range"]
+    if isinstance(saved_range, (list, tuple)) and len(saved_range) == 2:
+        start, end = saved_range
+        # Ajustar el rango si está fuera de los límites
+        start = max(min_date, min(start, max_date))
+        end = max(min_date, min(end, max_date))
+        valid_range = (start, end)
+    else:
+        valid_range = default_range
+
     week_presets = build_week_presets(min_date, max_date)
 
     st.sidebar.header("Filtros globales")
     date_range = st.sidebar.date_input(
         "Rango de fechas",
-        value=st.session_state.filtros["date_range"],
+        value=valid_range,
         min_value=min_date,
         max_value=max_date,
         key="date_range_input",

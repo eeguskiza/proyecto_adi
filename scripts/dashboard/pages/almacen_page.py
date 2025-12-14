@@ -60,7 +60,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
             title="Top Materia Prima Recibida (Kg)"
         )
         fig_top.update_xaxes(type='category') 
-        c1.plotly_chart(fig_top, use_container_width=True)
+        c1.plotly_chart(fig_top, width='stretch')
 
         compras["fecha"] = compras["fecha_recepcion_ts"].dt.date
         ts = compras.groupby(["fecha", "ref_materia_str"])["qty_recibida"].sum().reset_index()
@@ -71,7 +71,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
             color="ref_materia_str", 
             title="Cronología de Entradas MP"
         )
-        c2.plotly_chart(fig_ts, use_container_width=True)
+        c2.plotly_chart(fig_ts, width='stretch')
 
     st.markdown("---")
 
@@ -99,7 +99,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
             title="Top 10 Referencias Ingresadas (Unidades)"
         )
         fig_piezas.update_xaxes(type='category') 
-        c3.plotly_chart(fig_piezas, use_container_width=True)
+        c3.plotly_chart(fig_piezas, width='stretch')
 
         prod_ref["fecha"] = prod_ref["ts_fin"].dt.date
         ts_pt = prod_ref.groupby("fecha")["piezas_ok"].sum().reset_index()
@@ -113,7 +113,7 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
             labels={"piezas_ok": "Piezas OK", "fecha": "Fecha"}
         )
         fig_ts_pt.update_traces(line_color="#22c55e")
-        c4.plotly_chart(fig_ts_pt, use_container_width=True)
+        c4.plotly_chart(fig_ts_pt, width='stretch')
 
     # Seccion 3: Detalle de lotes
     if not compras.empty:
@@ -129,4 +129,4 @@ def page_almacen(filtered: dict, refs: pd.DataFrame) -> None:
                 title="Mapa de Recepciones: Tamaño de Lote vs Fecha",
                 labels={"qty_recibida": "Kg Lote", "fecha_recepcion_ts": "Fecha"}
             )
-            st.plotly_chart(fig_scatter, use_container_width=True)
+            st.plotly_chart(fig_scatter, width='stretch')

@@ -9,8 +9,19 @@ def inject_metric_styles() -> None:
     st.markdown(
         """
         <style>
-        /* Sidebar tweaks */
-        [data-testid="stSidebar"] > div:first-child {width:360px; min-width:320px; display:flex; flex-direction:column; height:100vh;}
+        /* Sidebar tweaks - mejor responsive */
+        [data-testid="stSidebar"] > div:first-child {
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
         .sidebar-spacer {flex:1;}
         .sidebar-grow {flex:1 1 auto;}
         .sidebar-nav {background:#0f172a; border:1px solid #1f2937; padding:10px; border-radius:12px;}
