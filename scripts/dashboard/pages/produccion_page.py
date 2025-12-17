@@ -58,10 +58,10 @@ def page_produccion(filtered: dict) -> None:
         labels={"value": "Piezas", "variable": "Tipo"},
         title="Piezas fabricadas por día (OK vs scrap)",
     )
-    c1.plotly_chart(fig_vol, width='stretch')
+    c1.plotly_chart(fig_vol, use_container_width=True)
     fig_scrap = px.line(serie, x="fecha", y="scrap_rate", markers=True, title="Scrap% diario")
     fig_scrap.update_yaxes(tickformat=".0%")
-    c2.plotly_chart(fig_scrap, width='stretch')
+    c2.plotly_chart(fig_scrap, use_container_width=True)
 
     st.markdown("#### Mezcla y rendimiento de fabricación")
     mix_ref = (
@@ -99,7 +99,7 @@ def page_produccion(filtered: dict) -> None:
             labels={"piezas_ok": "Piezas OK", "ref_label": "Referencia"},
         )
         fig_mix.update_layout(yaxis={"categoryorder": "total ascending"})
-        c3.plotly_chart(fig_mix, width='stretch')
+        c3.plotly_chart(fig_mix, use_container_width=True)
     if not perf_machine.empty:
         fig_uph = px.bar(
             perf_machine.sort_values("uph_real", ascending=False),
@@ -108,7 +108,7 @@ def page_produccion(filtered: dict) -> None:
             title="Ritmo real (UPH) por máquina",
             labels={"uph_real": "Piezas/hora", "machine_name": "Máquina"},
         )
-        c4.plotly_chart(fig_uph, width='stretch')
+        c4.plotly_chart(fig_uph, use_container_width=True)
 
     st.markdown("#### Scrap por recurso / referencia")
     c5, c6 = st.columns(2)
@@ -123,7 +123,7 @@ def page_produccion(filtered: dict) -> None:
             labels={"scrap_rate": "Scrap%", "machine_name": "Máquina"},
         )
         fig_scrap_m.update_xaxes(tickformat=".0%")
-        c5.plotly_chart(fig_scrap_m, width='stretch')
+        c5.plotly_chart(fig_scrap_m, use_container_width=True)
 
     scrap_ref = (
         prod.groupby("ref_id_str")
@@ -142,7 +142,7 @@ def page_produccion(filtered: dict) -> None:
             labels={"scrap_rate": "Scrap%", "ref_id_str": "Referencia"},
         )
         fig_scrap_r.update_xaxes(tickformat=".0%")
-        c6.plotly_chart(fig_scrap_r, width='stretch')
+        c6.plotly_chart(fig_scrap_r, use_container_width=True)
 
     st.markdown("#### Avance de órdenes del rango")
     ordenes = (

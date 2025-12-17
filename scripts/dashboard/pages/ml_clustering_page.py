@@ -156,7 +156,7 @@ def page_ml_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
         text="n_maquinas"
     )
     fig_dist.update_traces(textposition="outside")
-    col_sum2.plotly_chart(fig_dist, width='stretch')
+    col_sum2.plotly_chart(fig_dist, use_container_width=True)
 
     # Visualizacion 3D
     st.markdown("#### Visualizacion 3D de Clusters")
@@ -178,7 +178,7 @@ def page_ml_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
         color_discrete_sequence=px.colors.qualitative.Set2
     )
     fig_3d.update_traces(marker=dict(size=8, line=dict(width=1, color="DarkSlateGrey")))
-    st.plotly_chart(fig_3d, width='stretch')
+    st.plotly_chart(fig_3d, use_container_width=True)
 
     # Scatter 2D
     st.markdown("#### Graficos 2D de Clusters")
@@ -198,7 +198,7 @@ def page_ml_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     fig_disp_scrap.update_traces(marker=dict(size=12, line=dict(width=1, color="white")))
     fig_disp_scrap.update_xaxes(tickformat=".0%")
     fig_disp_scrap.update_yaxes(tickformat=".0%")
-    col_2d1.plotly_chart(fig_disp_scrap, width='stretch')
+    col_2d1.plotly_chart(fig_disp_scrap, use_container_width=True)
 
     fig_uph_scrap = px.scatter(
         machine_metrics,
@@ -212,7 +212,7 @@ def page_ml_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
     )
     fig_uph_scrap.update_traces(marker=dict(size=12, line=dict(width=1, color="white")))
     fig_uph_scrap.update_yaxes(tickformat=".0%")
-    col_2d2.plotly_chart(fig_uph_scrap, width='stretch')
+    col_2d2.plotly_chart(fig_uph_scrap, use_container_width=True)
 
     # Tabla detallada
     st.markdown("#### Detalle de Maquinas y Clusters Predichos")

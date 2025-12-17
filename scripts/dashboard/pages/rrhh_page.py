@@ -85,7 +85,7 @@ def page_rrhh(filtered: dict, prod: pd.DataFrame) -> None:
         yaxis_title="Horas Totales",
         yaxis=dict(range=[val_netas * 0.9, val_teoricas * 1.05])
     )
-    st.plotly_chart(fig_waterfall, width='stretch')
+    st.plotly_chart(fig_waterfall, use_container_width=True)
 
     # Preparacion de datos cruzados
     df_prod_mes = pd.DataFrame()
@@ -130,7 +130,7 @@ def page_rrhh(filtered: dict, prod: pd.DataFrame) -> None:
             "horas_permiso": "#3b82f6"
         }
     )
-    c1.plotly_chart(fig_abs, width='stretch')
+    c1.plotly_chart(fig_abs, use_container_width=True)
 
     fig_prod = go.Figure()
     fig_prod.add_trace(go.Bar(
@@ -155,7 +155,7 @@ def page_rrhh(filtered: dict, prod: pd.DataFrame) -> None:
         legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
         hovermode="x unified"
     )
-    c2.plotly_chart(fig_prod, width='stretch')
+    c2.plotly_chart(fig_prod, use_container_width=True)
 
     st.markdown("---")
 
@@ -190,18 +190,18 @@ def page_rrhh(filtered: dict, prod: pd.DataFrame) -> None:
             yaxis_title="Horas",
             legend=dict(orientation="h", y=1.1)
         )
-        c3.plotly_chart(fig_sat, width='stretch')
+        c3.plotly_chart(fig_sat, use_container_width=True)
 
         fig_gap = px.area(
-            df_merged, 
-            x="año_mes", 
-            y="pct_uso", 
+            df_merged,
+            x="año_mes",
+            y="pct_uso",
             markers=True,
             title="% Saturación (Horas Prod / Horas Netas)"
         )
         fig_gap.layout.yaxis.tickformat = ',.0%'
-        fig_gap.add_hline(y=0.85, line_dash="dot", annotation_text="Objetivo (85%)", line_color="green")
-        c4.plotly_chart(fig_gap, width='stretch')
+        fig_gap.add_hline(y=0.85, line=dict(dash="dot", color="green"), annotation_text="Objetivo (85%)")
+        c4.plotly_chart(fig_gap, use_container_width=True)
         
         total_gap = df_merged["horas_gap"].sum()
         st.caption(f"Diferencia acumulada: {total_gap:,.0f} horas pagadas no imputadas a órdenes de producción en el periodo.")
