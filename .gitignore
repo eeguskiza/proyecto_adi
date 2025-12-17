@@ -13,3 +13,23 @@ __pycache__/
 # entornos y secretos
 .env
 .venv/
+
+# modelos ML: solo versionar modelos base pre-entrenados
+# Ignorar todos los archivos en trained_model/
+models/classification/trained_model/*
+models/regression/trained_model/*
+models/clustering/trained_model/*
+
+# Excepto los modelos base
+!models/classification/trained_model/random_forest_classifier.pkl
+!models/classification/trained_model/scaler.pkl
+!models/classification/trained_model/features.txt
+!models/classification/trained_model/classes.txt
+
+!models/regression/trained_model/random_forest_model.pkl
+!models/regression/trained_model/scaler.pkl
+!models/regression/trained_model/features.txt
+
+!models/clustering/trained_model/kmeans_model.pkl
+!models/clustering/trained_model/scaler.pkl
+!models/clustering/trained_model/features.txt

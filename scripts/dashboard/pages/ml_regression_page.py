@@ -15,23 +15,96 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
+def list_available_regression_models():
+    """
+    Lista todos los modelos de regresion disponibles.
+
+    Returns:
+        dict: Diccionario con nombre_modelo -> ruta_archivos
+    """
+    model_dir = Path(__file__).parent.parent.parent.parent / "models" / "regression" / "trained_model"
+
+    available_models = {}
+
+    # Buscar modelo principal base (pre-entrenado)
+    if model_dir.exists() and (model_dir / "random_forest_model.pkl").exists():
+        available_models["Modelo Base"] = {
+            "model": model_dir / "random_forest_model.pkl",
+            "scaler": model_dir / "scaler.pkl",
+            "features": model_dir / "features.txt"
+        }
+
+    # Buscar modelos guardados en BentoML
+    try:
+        import bentoml
+        bento_models = bentoml.models.list()
+        for bm in bento_models:
+            if ("regressor" in bm.tag.name.lower() or "scrap" in bm.tag.name.lower()) and "scaler" not in bm.tag.name.lower():
+                available_models[f"{bm.tag.name} (v{bm.tag.version})"] = {
+                    "bentoml_tag": str(bm.tag),
+                    "type": "bentoml"
+                }
+    except:
+        pass
+
+    return available_models
+
+
 @st.cache_resource
-def load_regression_model():
-    """Carga el modelo de regresion entrenado."""
-    model_path = Path(__file__).parent.parent.parent.parent / "models" / "regression" / "trained_model"
+def load_regression_model(model_name=None):
+    """
+    Carga el modelo de regresion especificado.
+
+    Args:
+        model_name: Nombre del modelo a cargar. Si es None, carga el principal.
+
+    Returns:
+        tuple: (modelo, scaler, lista_features) o (None, None, None) si no existe
+    """
+    available_models = list_available_regression_models()
+
+    if not available_models:
+        return None, None, None
+
+    if model_name is None or model_name not in available_models:
+        model_name = list(available_models.keys())[0]
+
+    model_info = available_models[model_name]
 
     try:
-        with open(model_path / "random_forest_model.pkl", "rb") as f:
+        # Cargar desde BentoML
+        if model_info.get("type") == "bentoml":
+            import bentoml
+            bento_model = bentoml.models.get(model_info["bentoml_tag"])
+            metadata = bento_model.info.metadata
+            features = metadata.get("features", [])
+
+            model = bentoml.sklearn.load_model(model_info["bentoml_tag"])
+
+            scaler_tag = metadata.get("scaler_tag")
+            if scaler_tag:
+                scaler = bentoml.sklearn.load_model(scaler_tag)
+            else:
+                tag_parts = model_info["bentoml_tag"].split(":")
+                model_base_name = tag_parts[0]
+                scaler_name = f"{model_base_name}_scaler"
+                scaler = bentoml.sklearn.load_model(scaler_name)
+
+            return model, scaler, features
+
+        # Cargar desde pickle
+        with open(model_info["model"], "rb") as f:
             model = pickle.load(f)
 
-        with open(model_path / "scaler.pkl", "rb") as f:
+        with open(model_info["scaler"], "rb") as f:
             scaler = pickle.load(f)
 
-        with open(model_path / "features.txt", "r") as f:
+        with open(model_info["features"], "r") as f:
             features = [line.strip() for line in f.readlines()]
 
         return model, scaler, features
-    except FileNotFoundError:
+    except Exception as e:
+        st.error(f"Error al cargar modelo {model_name}: {str(e)}")
         return None, None, None
 
 
@@ -113,7 +186,7 @@ def page_ml_regression(filtered: dict, ciclos: pd.DataFrame) -> None:
     st.markdown("### Modo de Operacion")
     modo = st.radio(
         "Elige el modo:",
-        ["📊 Modelo Pre-entrenado", "🔧 Entrenar Modelo Interactivo"],
+        ["Modelo Pre-entrenado", "Entrenar Modelo Interactivo"],
         horizontal=True,
         help="Pre-entrenado: usa el modelo ya guardado. Interactivo: entrena tu propio modelo."
     )
@@ -143,17 +216,45 @@ def page_ml_regression(filtered: dict, ciclos: pd.DataFrame) -> None:
     df, features_df_all = prepare_features(df)
 
     # ========== MODO PRE-ENTRENADO ==========
-    if modo == "📊 Modelo Pre-entrenado":
-        model, scaler, features = load_regression_model()
+    if modo == "Modelo Pre-entrenado":
+        st.markdown("### Seleccion de Modelo Pre-entrenado")
 
-        if model is None:
-            st.error("Modelo pre-entrenado no encontrado. Ejecuta: python models/regression/train.py")
+        # Listar modelos disponibles
+        available_models = list_available_regression_models()
+
+        if not available_models:
+            st.error("No hay modelos pre-entrenados disponibles. Ejecuta: python models/regression/train.py")
+            st.info("O entrena un modelo en modo interactivo y guardalo.")
             return
 
-        st.markdown("""
-        Usando el **modelo pre-entrenado** con Random Forest.
+        # Selector de modelo
+        st.markdown(f"**{len(available_models)} modelo(s) disponible(s)**")
 
-        **Features**: Duración, Máquina, Referencia, Hora del día, Día de la semana, Estado OEE.
+        selected_model = st.selectbox(
+            "Selecciona el modelo a usar:",
+            options=list(available_models.keys()),
+            help="Elige entre los modelos entrenados disponibles"
+        )
+
+        # Mostrar informacion del modelo seleccionado
+        model_info = available_models[selected_model]
+        if model_info.get("type") == "bentoml":
+            st.info(f"Modelo de BentoML: {model_info['bentoml_tag']}")
+        else:
+            st.info(f"Modelo en disco: {model_info['model'].name}")
+
+        # Cargar modelo seleccionado
+        model, scaler, features = load_regression_model(selected_model)
+
+        if model is None:
+            st.error(f"Error al cargar el modelo: {selected_model}")
+            return
+
+        st.markdown("---")
+        st.markdown("""
+        Usando **Random Forest Regressor** para prediccion de scrap rate.
+
+        **Features**: Duracion, Maquina, Referencia, Hora del dia, Dia de la semana, Estado OEE.
         """)
 
         col1, col2, col3 = st.columns(3)
@@ -479,30 +580,68 @@ def page_ml_regression(filtered: dict, ciclos: pd.DataFrame) -> None:
                 else:
                     st.info("El modelo pre-entrenado sigue siendo mejor. Prueba ajustar hiperparámetros.")
 
-            # Opción de guardar
+            # Opcion de guardar
             st.markdown("---")
-            st.markdown("### 6️⃣ Guardar Modelo")
+            st.markdown("### Guardar Modelo")
+            st.info("Tu modelo ha sido entrenado. Guardalo en BentoML para uso futuro y despliegue como API.")
 
-            if st.button("💾 Guardar este modelo", help="Guarda el modelo entrenado para uso futuro"):
-                model_path = Path(__file__).parent.parent.parent.parent / "models" / "regression" / "trained_model"
-                model_path.mkdir(parents=True, exist_ok=True)
+            # Campo para nombre del modelo
+            model_name = st.text_input(
+                "Nombre del modelo:",
+                value="scrap_regressor",
+                help="Dale un nombre descriptivo a tu modelo"
+            )
 
-                with open(model_path / "interactive_model.pkl", "wb") as f:
-                    pickle.dump(model, f)
-                with open(model_path / "interactive_scaler.pkl", "wb") as f:
-                    pickle.dump(scaler, f)
-                with open(model_path / "interactive_features.txt", "w") as f:
-                    f.write("\n".join(selected_features))
+            if st.button("Guardar Modelo", help="Guarda el modelo en BentoML", use_container_width=True, type="primary"):
+                if not model_name or model_name.strip() == "":
+                    st.error("Por favor ingresa un nombre para el modelo")
+                else:
+                    try:
+                        import bentoml
 
-                st.success(f"✅ Modelo guardado en: models/regression/trained_model/interactive_model.pkl")
+                        scaler_name = f"{model_name}_scaler"
+                        saved_scaler = bentoml.sklearn.save_model(
+                            scaler_name,
+                            scaler,
+                            labels={
+                                "framework": "sklearn",
+                                "model_type": "StandardScaler",
+                                "task": "preprocessing"
+                            },
+                            metadata={
+                                "features": selected_features
+                            }
+                        )
+
+                        bentoml.sklearn.save_model(
+                            model_name,
+                            model,
+                            labels={
+                                "framework": "sklearn",
+                                "model_type": "RandomForestRegressor",
+                                "task": "regression"
+                            },
+                            metadata={
+                                "features": selected_features,
+                                "target": "scrap_rate",
+                                "scaler_tag": str(saved_scaler.tag)
+                            }
+                        )
+
+                        st.success(f"Modelo guardado exitosamente en BentoML: {model_name}")
+
+                    except ImportError:
+                        st.error("BentoML no esta instalado. Ejecuta: pip install bentoml")
+                    except Exception as e:
+                        st.error(f"Error al guardar: {str(e)}")
 
     # ========== VISUALIZACIONES COMUNES (para ambos modos) ==========
-    if modo == "📊 Modelo Pre-entrenado" or 'trained_model' in st.session_state:
+    if modo == "Modelo Pre-entrenado" or 'trained_model' in st.session_state:
         st.markdown("---")
-        st.markdown("### Análisis de Predicciones")
+        st.markdown("### Analisis de Predicciones")
 
         # Usar el modelo correspondiente para predicciones completas
-        if modo == "📊 Modelo Pre-entrenado":
+        if modo == "Modelo Pre-entrenado":
             features_df = features_df_all.copy()
             for feature in features:
                 if feature not in features_df.columns:

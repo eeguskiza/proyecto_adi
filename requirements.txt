@@ -5,3 +5,5 @@ scikit-learn
 streamlit
 plotly
 requests
+bentoml
+pydantic

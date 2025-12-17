@@ -56,15 +56,14 @@ class OllamaChatbot:
             Prompt de contexto formateado
         """
         context_parts = [
-            "Eres un asistente experto en análisis de datos de manufactura.",
+            "Eres un asistente experto en análisis de datos de manufactura e industria.",
             "Tu objetivo es ayudar a los usuarios a comprender los datos del dashboard.",
-            "Debes proporcionar insights, explicar métricas, responder preguntas y sugerir acciones.",
+            "Debes proporcionar insights concretos, explicar métricas, responder preguntas y sugerir acciones específicas.",
             "",
             f"**PÁGINA ACTUAL:** {current_page}",
             ""
         ]
 
-        # Añadir información de filtros activos
         if filtros:
             context_parts.append("**FILTROS ACTIVOS:**")
 
@@ -88,7 +87,7 @@ class OllamaChatbot:
             context_parts.append("")
 
         context_parts.extend([
-            "**DATOS DISPONIBLES (FILTRADOS):**",
+            "**DATOS VISIBLES EN PANTALLA (FILTRADOS):**",
             ""
         ])
 
@@ -171,22 +170,114 @@ class OllamaChatbot:
                 ""
             ])
 
-        # Añadir información sobre métricas clave
         context_parts.extend([
+            "**CONTEXTO ESPECÍFICO DE LA PÁGINA ACTUAL:**",
+            ""
+        ])
+
+        if current_page == "Cuadro de mando general" and 'produccion' in data_dict and not data_dict['produccion'].empty:
+            prod = data_dict['produccion']
+            maquina_seleccionada = filtros.get('recurso_oee', "(Todos)") if filtros else "(Todos)"
+
+            if maquina_seleccionada != "(Todos)":
+                context_parts.extend([
+                    f"El usuario está visualizando el OEE de la máquina: {maquina_seleccionada}",
+                    "Puede ver gráficos de disponibilidad, rendimiento y calidad en el tiempo.",
+                    "Tu objetivo es ayudarle a entender el rendimiento de esta máquina específica.",
+                    ""
+                ])
+            else:
+                maquinas_disponibles = prod['machine_name'].unique().tolist()
+                context_parts.extend([
+                    f"El usuario está viendo el resumen general de {len(maquinas_disponibles)} máquinas.",
+                    f"Máquinas disponibles: {', '.join(maquinas_disponibles[:5])}{'...' if len(maquinas_disponibles) > 5 else ''}",
+                    "Puede ayudarle a identificar qué máquina analizar en detalle.",
+                    ""
+                ])
+
+        elif current_page == "ML - Clustering" and 'produccion' in data_dict and not data_dict['produccion'].empty:
+            context_parts.extend([
+                "El usuario está en la página de Clustering de Máquinas.",
+                "Esta página agrupa máquinas con características similares usando K-Means.",
+                "Se analizan: disponibilidad, scrap rate, UPH real, y duración de producción.",
+                "Tu objetivo es ayudarle a:",
+                "  - Entender qué máquinas están en cada cluster",
+                "  - Identificar clusters de alto/bajo rendimiento",
+                "  - Sugerir acciones específicas por cluster",
+                "  - Explicar por qué ciertas máquinas están agrupadas",
+                ""
+            ])
+
+        elif current_page == "ML - Regresión Scrap" and 'produccion' in data_dict and not data_dict['produccion'].empty:
+            context_parts.extend([
+                "El usuario está en la página de Predicción de Scrap.",
+                "Esta página predice el % de scrap esperado usando Random Forest.",
+                "Variables consideradas: duración, hora del día, día de semana, referencia, estado, máquina.",
+                "Tu objetivo es ayudarle a:",
+                "  - Interpretar las predicciones de scrap",
+                "  - Identificar qué factores más influyen en el scrap",
+                "  - Sugerir acciones para reducir el scrap predicho",
+                "  - Explicar por qué ciertas operaciones tienen alto scrap esperado",
+                ""
+            ])
+
+        elif current_page == "ML - Clasificación Estado" and 'produccion' in data_dict and not data_dict['produccion'].empty:
+            context_parts.extend([
+                "El usuario está en la página de Clasificación de Estado de Máquinas.",
+                "Esta página clasifica máquinas en: EXCELENTE, BUENA, REQUIERE_ATENCION, CRITICA.",
+                "Criterios: disponibilidad, scrap rate, UPH real, duración producción, ratios de prep e incidencias.",
+                "Tu objetivo es ayudarle a:",
+                "  - Entender por qué cada máquina está en su categoría",
+                "  - Priorizar qué máquinas atender primero (las CRITICAS)",
+                "  - Sugerir acciones concretas para mejorar máquinas REQUIERE_ATENCION",
+                "  - Identificar qué hacen bien las máquinas EXCELENTES",
+                ""
+            ])
+
+        elif current_page == "Producción" and 'produccion' in data_dict and not data_dict['produccion'].empty:
+            prod = data_dict['produccion']
+            context_parts.extend([
+                "El usuario está en la página de Análisis de Producción.",
+                "Puede ver producción detallada por máquina, referencia, orden de trabajo.",
+                f"Referencias producidas: {prod['ref_id_str'].nunique()}",
+                f"Órdenes de trabajo: {prod['work_order_id'].nunique()}",
+                "Tu objetivo es ayudarle a analizar eficiencia, scrap, y cumplimiento de órdenes.",
+                ""
+            ])
+
+        elif current_page == "Almacén MP":
+            context_parts.extend([
+                "El usuario está en la página de Almacén de Materia Prima.",
+                "Puede ver recepciones de MP, stock, y gestión de inventario.",
+                "Tu objetivo es ayudarle con análisis de consumo, disponibilidad de MP, y rotación.",
+                ""
+            ])
+
+        elif current_page == "RRHH":
+            context_parts.extend([
+                "El usuario está en la página de Recursos Humanos.",
+                "Puede ver horas trabajadas, absentismo, productividad por persona.",
+                "Tu objetivo es ayudarle a analizar eficiencia de personal y detectar problemas de absentismo.",
+                ""
+            ])
+
+        context_parts.extend([
+            "",
             "**MÉTRICAS CLAVE:**",
-            "- OEE (Overall Equipment Effectiveness): Disponibilidad × Rendimiento × Calidad",
-            "- Disponibilidad: % de tiempo que la máquina está produciendo",
-            "- Rendimiento: Velocidad real vs velocidad teórica (UPH real vs ideal)",
-            "- Calidad: % de piezas OK vs total",
-            "- UPH (Units Per Hour): Piezas producidas por hora",
-            "- Scrap %: Porcentaje de piezas defectuosas",
+            "- OEE: Disponibilidad × Rendimiento × Calidad",
+            "- Disponibilidad: % tiempo produciendo vs tiempo total",
+            "- Rendimiento: Velocidad real / velocidad teórica",
+            "- Calidad: % piezas OK / total piezas",
+            "- UPH: Unidades por hora",
+            "- Scrap %: Piezas defectuosas / total",
             "",
             "**INSTRUCCIONES:**",
-            "- Responde en español de manera clara y concisa",
-            "- Si detectas anomalías o patrones interesantes, menciónalo",
-            "- Sugiere acciones concretas cuando sea apropiado",
-            "- Explica las métricas en términos sencillos si el usuario lo necesita",
-            "- Usa los datos proporcionados para respaldar tus respuestas",
+            "- Responde en español claro y conciso",
+            "- Menciona números específicos de los datos cuando sea relevante",
+            "- Si detectas anomalías o patrones, explícalos claramente",
+            "- Sugiere acciones concretas y priorizadas",
+            "- Explica métricas solo si el usuario lo pide",
+            "- Sé directo y enfocado en resolver el problema del usuario",
             ""
         ])
 
@@ -204,19 +295,14 @@ class OllamaChatbot:
             Respuesta del chatbot
         """
         try:
-            # Construir el prompt completo
-            if not self.conversation_history:
-                # Primera conversación, incluir contexto
-                system_prompt = data_context
-                messages = [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_message}
-                ]
-            else:
-                # Conversación continua
-                messages = self.conversation_history + [
-                    {"role": "user", "content": user_message}
-                ]
+            messages = [
+                {"role": "system", "content": data_context}
+            ]
+
+            if self.conversation_history:
+                messages.extend(self.conversation_history)
+
+            messages.append({"role": "user", "content": user_message})
 
             # Llamar a Ollama API
             response = requests.post(
@@ -392,14 +478,54 @@ def render_chatbot_bubble(data_dict: Dict[str, Any], current_page: str, filtros:
                 else:
                     st.warning("Por favor, escribe una pregunta")
 
-            # Sugerencias rápidas
-            with st.expander("💡 Preguntas rápidas"):
-                if st.button("Estado general de producción", width='stretch', key="q1"):
-                    st.session_state.quick_question = "¿Cuál es el estado general de la producción?"
-                if st.button("Máquina con peor rendimiento", width='stretch', key="q2"):
-                    st.session_state.quick_question = "¿Qué máquina tiene el peor rendimiento?"
-                if st.button("Explicar qué es el OEE", width='stretch', key="q3"):
-                    st.session_state.quick_question = "Explícame qué es el OEE y cómo se calcula"
+            with st.expander("💡 Preguntas sugeridas"):
+                if current_page == "Cuadro de mando general":
+                    if st.button("Resumen de rendimiento", width='stretch', key="q1"):
+                        st.session_state.quick_question = "Dame un resumen del rendimiento general de las máquinas"
+                    if st.button("Máquina con peor OEE", width='stretch', key="q2"):
+                        st.session_state.quick_question = "¿Qué máquina tiene el peor OEE y por qué?"
+                    if st.button("Tendencias preocupantes", width='stretch', key="q3"):
+                        st.session_state.quick_question = "¿Hay alguna tendencia preocupante que deba atender?"
+
+                elif current_page == "ML - Clustering":
+                    if st.button("Interpretar clusters", width='stretch', key="q1"):
+                        st.session_state.quick_question = "Explícame qué significa cada cluster y qué máquinas debo priorizar"
+                    if st.button("Mejores y peores grupos", width='stretch', key="q2"):
+                        st.session_state.quick_question = "¿Cuál es el cluster de mejor rendimiento y cuál el peor?"
+                    if st.button("Acciones por cluster", width='stretch', key="q3"):
+                        st.session_state.quick_question = "¿Qué acciones concretas debo tomar para cada cluster?"
+
+                elif current_page == "ML - Regresión Scrap":
+                    if st.button("Factores clave del scrap", width='stretch', key="q1"):
+                        st.session_state.quick_question = "¿Qué factores están causando más scrap?"
+                    if st.button("Reducir scrap", width='stretch', key="q2"):
+                        st.session_state.quick_question = "¿Cómo puedo reducir el scrap en las operaciones?"
+                    if st.button("Operaciones de alto riesgo", width='stretch', key="q3"):
+                        st.session_state.quick_question = "¿Qué operaciones tienen mayor riesgo de scrap alto?"
+
+                elif current_page == "ML - Clasificación Estado":
+                    if st.button("Máquinas críticas", width='stretch', key="q1"):
+                        st.session_state.quick_question = "¿Qué máquinas están en estado crítico y qué debo hacer?"
+                    if st.button("Cómo mejorar máquinas", width='stretch', key="q2"):
+                        st.session_state.quick_question = "¿Cómo puedo mejorar las máquinas que requieren atención?"
+                    if st.button("Aprender de las mejores", width='stretch', key="q3"):
+                        st.session_state.quick_question = "¿Qué hacen bien las máquinas excelentes que puedo replicar?"
+
+                elif current_page == "Producción":
+                    if st.button("Análisis de scrap", width='stretch', key="q1"):
+                        st.session_state.quick_question = "¿Cuáles son las principales causas de scrap?"
+                    if st.button("Productividad por máquina", width='stretch', key="q2"):
+                        st.session_state.quick_question = "¿Qué máquina es más productiva y cuál menos?"
+                    if st.button("Cumplimiento de órdenes", width='stretch', key="q3"):
+                        st.session_state.quick_question = "¿Cómo va el cumplimiento de las órdenes de trabajo?"
+
+                else:
+                    if st.button("Estado general", width='stretch', key="q1"):
+                        st.session_state.quick_question = "¿Cuál es el estado general de los datos que estoy viendo?"
+                    if st.button("Principales problemas", width='stretch', key="q2"):
+                        st.session_state.quick_question = "¿Cuáles son los principales problemas que debo atender?"
+                    if st.button("Recomendaciones", width='stretch', key="q3"):
+                        st.session_state.quick_question = "Dame recomendaciones concretas basadas en estos datos"
 
             # Procesar pregunta rápida si existe
             if 'quick_question' in st.session_state and st.session_state.quick_question:
