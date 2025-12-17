@@ -37,6 +37,7 @@ def inject_metric_styles() -> None:
     )
 
 
+@st.cache_data(show_spinner=False, ttl=60)
 def compute_oee(prod: pd.DataFrame, ciclos: pd.DataFrame) -> Dict[str, object]:
     if prod.empty:
         return {
@@ -69,22 +70,73 @@ def compute_oee(prod: pd.DataFrame, ciclos: pd.DataFrame) -> Dict[str, object]:
     )
     prod["total_piezas"] = prod["piezas_ok"] + prod["piezas_scrap"]
 
-    prod_prod_hist = prod[(prod["estado_oee"] == "produccion") & (prod["duracion_min"] > 0)]
-    real_rate = (
-        prod_prod_hist.groupby(["machine_name", "ref_id_str"])
-        .agg(total_piezas=("total_piezas", "sum"), dur_min=("duracion_min", "sum"))
-        .reset_index()
-    )
-    real_rate = real_rate[real_rate["dur_min"] > 0]
-    real_rate["uph_real"] = real_rate["total_piezas"] / (real_rate["dur_min"] / 60)
-    real_rate["uph_real"] = real_rate["uph_real"].clip(lower=30, upper=180)
-    prod = prod.merge(real_rate[["machine_name", "ref_id_str", "uph_real"]], on=["machine_name", "ref_id_str"], how="left")
+    # NUEVA ESTRATEGIA: Calcular tiempo de ciclo (segundos/pieza) en lugar de UPH
+    # Esto evita el problema de comparar referencias de diferentes complejidades
+    prod_prod_hist = prod[(prod["estado_oee"] == "produccion") & (prod["duracion_min"] > 0) & (prod["total_piezas"] > 0)]
 
-    prod["piezas_hora_teorico"] = prod["piezas_hora_teorico"].replace(0, np.nan)
-    prod["piezas_hora_teorico"] = prod["piezas_hora_teorico"].fillna(prod["uph_real"])
-    prod["piezas_hora_teorico"] = prod["piezas_hora_teorico"].replace(0, np.nan)
-    prod["piezas_hora_teorico"] = prod["piezas_hora_teorico"].fillna(80)
-    prod = prod.drop(columns=["uph_real"])
+    # Calcular tiempo de ciclo real por operación (segundos por pieza)
+    prod_prod_hist_ops = prod_prod_hist.copy()
+    prod_prod_hist_ops["cycle_time_sec"] = (prod_prod_hist_ops["duracion_min"] * 60) / prod_prod_hist_ops["total_piezas"]
+
+    # Filtrar outliers extremos en tiempo de ciclo
+    # Menos de 1 segundo/pieza (3600 UPH) o más de 600 segundos/pieza (6 UPH) son probablemente errores
+    prod_prod_hist_ops = prod_prod_hist_ops[
+        (prod_prod_hist_ops["cycle_time_sec"] >= 1) &
+        (prod_prod_hist_ops["cycle_time_sec"] <= 600)
+    ]
+
+    # Calcular percentil 25 del tiempo de ciclo (los mejores desempeños, tiempos más rápidos)
+    # Percentil 25 = tiempos rápidos pero alcanzables (no el mínimo absoluto que puede ser un outlier)
+    cycle_time_p25 = (
+        prod_prod_hist_ops.groupby(["machine_name", "ref_id_str"])["cycle_time_sec"]
+        .quantile(0.25)
+        .reset_index()
+        .rename(columns={"cycle_time_sec": "cycle_time_objetivo"})
+    )
+
+    # También calcular mediana como fallback
+    cycle_time_median = (
+        prod_prod_hist_ops.groupby(["machine_name", "ref_id_str"])["cycle_time_sec"]
+        .median()
+        .reset_index()
+        .rename(columns={"cycle_time_sec": "cycle_time_mediana"})
+    )
+
+    # Merge de los tiempos de ciclo calculados
+    prod = prod.merge(cycle_time_p25, on=["machine_name", "ref_id_str"], how="left")
+    prod = prod.merge(cycle_time_median, on=["machine_name", "ref_id_str"], how="left")
+
+    # Convertir piezas_hora_teorico de ciclos a tiempo de ciclo (si existe)
+    prod["cycle_time_from_ciclos"] = np.where(
+        prod["piezas_hora_teorico"] > 0,
+        3600 / prod["piezas_hora_teorico"],  # Convertir UPH a segundos/pieza
+        np.nan
+    )
+
+    # Estrategia en cascada para elegir el tiempo de ciclo objetivo:
+    # 1. Si existe en ciclos_teoricos.csv → usar ese
+    # 2. Si no, usar el percentil 25 del histórico (objetivo ambicioso pero alcanzable)
+    # 3. Si no hay suficientes datos, usar la mediana histórica
+    # 4. Como último recurso, usar mediana global
+
+    prod["cycle_time_teorico"] = prod["cycle_time_from_ciclos"]
+    prod["cycle_time_teorico"] = prod["cycle_time_teorico"].fillna(prod["cycle_time_objetivo"])
+    prod["cycle_time_teorico"] = prod["cycle_time_teorico"].fillna(prod["cycle_time_mediana"])
+
+    # Calcular mediana global como último recurso
+    if prod["cycle_time_teorico"].isna().any() and len(cycle_time_median) > 0:
+        mediana_global = cycle_time_median["cycle_time_mediana"].median()
+        if pd.notna(mediana_global) and mediana_global > 0:
+            prod["cycle_time_teorico"] = prod["cycle_time_teorico"].fillna(mediana_global)
+        else:
+            # Último recurso: 45 segundos/pieza (80 UPH)
+            prod["cycle_time_teorico"] = prod["cycle_time_teorico"].fillna(45)
+
+    # Convertir el tiempo de ciclo teórico de vuelta a UPH para mantener compatibilidad
+    prod["piezas_hora_teorico"] = 3600 / prod["cycle_time_teorico"]
+
+    # Limpiar columnas auxiliares
+    prod = prod.drop(columns=["cycle_time_from_ciclos", "cycle_time_objetivo", "cycle_time_mediana", "cycle_time_teorico"], errors='ignore')
 
     duraciones = prod.groupby("estado_oee")["duracion_min"].sum().to_dict()
     dur_prod = duraciones.get("produccion", 0)
@@ -106,6 +158,9 @@ def compute_oee(prod: pd.DataFrame, ciclos: pd.DataFrame) -> Dict[str, object]:
     performance = actual_output / ideal_output if ideal_output > 0 and actual_output > 0 else np.nan
     uph_real = actual_output / (dur_prod / 60) if dur_prod > 0 else np.nan
 
+    # Calcular UPH teórico medio usado (para info)
+    uph_teorico_medio = prod_prod["piezas_hora_teorico"].mean() if len(prod_prod) > 0 else np.nan
+
     total_ok = int(prod_last["piezas_ok"].sum())
     total_scrap = int(prod_last["piezas_scrap"].sum())
     total_piezas = total_ok + total_scrap
@@ -125,9 +180,13 @@ def compute_oee(prod: pd.DataFrame, ciclos: pd.DataFrame) -> Dict[str, object]:
         "total_scrap": total_scrap,
         "total_piezas": total_piezas,
         "uph_real": uph_real,
+        "uph_teorico": uph_teorico_medio,
+        "actual_output": actual_output,
+        "ideal_output": ideal_output,
     }
 
 
+@st.cache_data(show_spinner=False, ttl=60)
 def compute_oee_daily(prod: pd.DataFrame, ciclos: pd.DataFrame) -> pd.DataFrame:
     """Calcula OEE día a día para análisis de tendencias."""
     if prod.empty:
@@ -138,11 +197,16 @@ def compute_oee_daily(prod: pd.DataFrame, ciclos: pd.DataFrame) -> pd.DataFrame:
         {"producción": "produccion", "produccion": "produccion", "preparación": "preparacion", "preparacion": "preparacion"}
     )
     prod["estado_oee"] = prod["estado_oee"].fillna("incidencia")
-    prod["fecha"] = prod["ts_ini"].dt.date
+
+    # Asegurar que tenemos solo la fecha (sin hora)
+    prod["fecha_day"] = pd.to_datetime(prod["ts_ini"].dt.date)
 
     daily_oee = []
-    for fecha in prod["fecha"].unique():
-        prod_day = prod[prod["fecha"] == fecha]
+    # Ordenar las fechas únicas para procesamiento ordenado
+    fechas_unicas = sorted(prod["fecha_day"].unique())
+
+    for fecha in fechas_unicas:
+        prod_day = prod[prod["fecha_day"] == fecha]
         oee_day = compute_oee(prod_day, ciclos)
         daily_oee.append({
             "fecha": fecha,
@@ -152,7 +216,12 @@ def compute_oee_daily(prod: pd.DataFrame, ciclos: pd.DataFrame) -> pd.DataFrame:
             "quality": oee_day["quality"],
         })
 
-    return pd.DataFrame(daily_oee).sort_values("fecha")
+    result = pd.DataFrame(daily_oee)
+    if not result.empty:
+        result["fecha"] = pd.to_datetime(result["fecha"])
+        result = result.sort_values("fecha")
+
+    return result
 
 
 def get_kpi_color(value: float, thresholds: Dict[str, float]) -> str:
@@ -205,25 +274,12 @@ def render_kpi_cards(oee_data: Dict[str, object]) -> None:
                 <div class="metric-value" style="color: {qual_color};">{qual_val}</div>
                 <div class="metric-sub">Objetivo: ≥97%</div>
             </div>
-            <div class="metric-card">
-                <div class="metric-label">Piezas rango</div>
-                <div class="metric-value">{piezas_val}</div>
-                <div class="metric-sub">OK: {piezas_ok}</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-label">UPH real (prod)</div>
-                <div class="metric-value">{uph_val}</div>
-                <div class="metric-sub">Piezas/hora</div>
-            </div>
         </div>
         """.format(
             oee_val=f"{oee:.1%}" if pd.notna(oee) else "—",
             disp_val=f"{availability:.1%}" if pd.notna(availability) else "—",
             perf_val=f"{performance:.1%}" if pd.notna(performance) else "—",
             qual_val=f"{quality:.1%}" if pd.notna(quality) else "—",
-            piezas_val=f"{piezas_total:,}",
-            piezas_ok=f"{oee_data['total_ok']:,}",
-            uph_val=f"{uph_real:,.1f}" if pd.notna(uph_real) else "—",
             oee_color=oee_color,
             disp_color=disp_color,
             perf_color=perf_color,

@@ -165,7 +165,7 @@ def page_produccion(filtered: dict) -> None:
     )
     ordenes = ordenes.sort_values("ts_ini", ascending=False)
     cols_ordenes = ["work_order_id", "cliente", "ref_id_str", "qty_plan", "piezas_ok", "piezas_scrap", "progreso", "scrap_rate", "ts_ini", "ts_fin"]
-    st.dataframe(ordenes[cols_ordenes].head(50), width="stretch", hide_index=True)
+    st.dataframe(ordenes[cols_ordenes].head(50), width='stretch', hide_index=True)
     st.caption("Top 50 órdenes del rango por fecha de inicio.")
 
     st.markdown("#### Detalle de operaciones en rango")
@@ -186,4 +186,4 @@ def page_produccion(filtered: dict) -> None:
         "scrap_rate",
         "turno",
     ]
-    st.dataframe(prod[cols_tabla], width="stretch", hide_index=True)
+    st.dataframe(prod[cols_tabla], width='stretch', hide_index=True)

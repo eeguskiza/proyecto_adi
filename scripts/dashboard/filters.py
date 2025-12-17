@@ -47,43 +47,54 @@ def get_filters(data: Dict[str, pd.DataFrame]) -> Dict[str, object]:
     week_presets = build_week_presets(min_date, max_date)
 
     st.sidebar.header("Filtros globales")
-    date_range = st.sidebar.date_input(
-        "Rango de fechas",
-        value=valid_range,
-        min_value=min_date,
-        max_value=max_date,
-        key="date_range_input",
-    )
-    if isinstance(date_range, dt.date):
-        date_range = (date_range, date_range)
-    if not isinstance(date_range, (list, tuple)) or len(date_range) == 0:
-        date_range = default_range
-    if len(date_range) == 1:
-        date_range = (date_range[0], date_range[0])
 
-    week_match = "(Rango personalizado)"
-    for label, w_start, w_end in week_presets:
-        if date_range[0] == w_start and date_range[1] == w_end:
-            week_match = label
-            break
-
-    week_options = ["(Rango personalizado)"] + [w[0] for w in week_presets]
-    initial_week_label = st.session_state.filtros.get("week_label", "(Rango personalizado)")
-    if initial_week_label == "(Rango personalizado)" and week_match != "(Rango personalizado)":
-        initial_week_label = week_match
-    week_label = st.sidebar.selectbox(
-        "Semana (domingo a viernes)",
-        week_options,
-        index=week_options.index(initial_week_label)
-        if initial_week_label in week_options
-        else 0,
+    # Selector de tipo de filtro
+    filter_type = st.sidebar.radio(
+        "Tipo de filtro",
+        options=["Rango de fechas", "Por semana"],
+        index=0 if st.session_state.filtros.get("filter_type", "Rango de fechas") == "Rango de fechas" else 1,
+        horizontal=True
     )
-    if week_label != "(Rango personalizado)":
-        selected = next((w for w in week_presets if w[0] == week_label), None)
-        if selected:
-            date_range = (selected[1], selected[2])
-    elif week_match != "(Rango personalizado)":
-        week_label = week_match
+
+    st.session_state.filtros["filter_type"] = filter_type
+
+    if filter_type == "Rango de fechas":
+        # Mostrar solo el date_input
+        date_range = st.sidebar.date_input(
+            "Seleccionar rango",
+            value=valid_range,
+            min_value=min_date,
+            max_value=max_date,
+            key="date_range_input",
+        )
+        if isinstance(date_range, dt.date):
+            date_range = (date_range, date_range)
+        if not isinstance(date_range, (list, tuple)) or len(date_range) == 0:
+            date_range = default_range
+        if len(date_range) == 1:
+            date_range = (date_range[0], date_range[0])
+
+        week_label = "(Rango personalizado)"
+    else:
+        # Mostrar solo el selector de semanas
+        week_options = [w[0] for w in week_presets]
+        initial_week_label = st.session_state.filtros.get("week_label", week_options[0] if week_options else "(Rango personalizado)")
+
+        if week_options:
+            week_label = st.sidebar.selectbox(
+                "Seleccionar semana",
+                week_options,
+                index=week_options.index(initial_week_label) if initial_week_label in week_options else 0,
+            )
+            selected = next((w for w in week_presets if w[0] == week_label), None)
+            if selected:
+                date_range = (selected[1], selected[2])
+            else:
+                date_range = default_range
+        else:
+            st.sidebar.warning("No hay semanas disponibles en el rango de datos")
+            date_range = default_range
+            week_label = "(Rango personalizado)"
 
     plantas = sorted(data["produccion"]["planta"].dropna().unique())
     machines = sorted(data["produccion"]["machine_name"].dropna().unique())

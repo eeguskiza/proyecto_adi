@@ -1,0 +1,3 @@
+trained_at: 2025-12-17T11:16:52.149958
+n_clusters: 3
+features: ['disponibilidad', 'scrap_rate', 'uph_real', 'dur_prod']

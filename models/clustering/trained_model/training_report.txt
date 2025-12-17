@@ -1,0 +1,26 @@
+============================================================
+REPORTE DE ENTRENAMIENTO - CLUSTERING DE MAQUINAS
+============================================================
+
+Fecha: 2025-12-17 11:16:52
+Total de maquinas: 55
+Numero de clusters: 3
+
+RESUMEN POR CLUSTER
+------------------------------------------------------------
+ cluster  n_maquinas  disp_media  scrap_medio  uph_media
+       0          51    0.827431     0.007517   7.040045
+       1           3    0.817786     0.000662 163.668191
+       2           1    0.802685     1.000000   0.000000
+
+MAQUINAS POR CLUSTER
+------------------------------------------------------------
+
+Cluster 0 (51 maquinas):
+  CURVADORA, Centro MAZAK, Curvadora25, Fresadora12, Fresadora140, Fresadora141, Granalladora, Granalladora Sthick, Horno, Linea Luk 1, Linea Luk 2, Linea Luk 3, Linea Luk 4, Linea SACHS, Linea Volkswagen, Linea Volkswagen 2, PRENSA, Prensa27, Prensa518, Robot160 entradas 2 cabezal, SOLDADORA, Soldadora Ideal DD0101, Soldadora107, Talladora CNC 48, Talladora Liebher 265, Talladora OMR, Talladora Phauter P630, Talladora150, Talladora151, Talladora21 LUK3, Talladora217, Talladora230 Sachs, Talladora302, Talladora40 LUK1, Talladora44 LUK2, Talladora47, Talladora52, Temple154, Temple19, Temple191, Temple303, Torno CMZ 241, Torno Coroa 305, Torno152, Torno153, Torno165, Torno199, Torno201, Torno63, Torno88, talladora229 Phauter Luk 6
+
+Cluster 1 (3 maquinas):
+  CURVADORA-SIERRA, Centro Daewo, Torno54
+
+Cluster 2 (1 maquinas):
+  Torno Daewo V15

@@ -1,0 +1,53 @@
+============================================================
+REPORTE DE ENTRENAMIENTO - CLASIFICACION DE ESTADO DE MAQUINAS
+============================================================
+
+Fecha: 2025-12-17 11:17:07
+Modelo: Random Forest Classifier
+Target: Estado de Maquina (EXCELENTE / BUENA / REQUIERE_ATENCION / CRITICA)
+
+METRICAS DE EVALUACION
+------------------------------------------------------------
+Accuracy: 0.9277 (92.77%)
+
+CLASSIFICATION REPORT
+------------------------------------------------------------
+                   precision    recall  f1-score   support
+
+            BUENA       0.86      0.92      0.89        13
+          CRITICA       1.00      0.40      0.57         5
+        EXCELENTE       1.00      1.00      1.00         5
+REQUIERE_ATENCION       0.94      0.97      0.95        60
+
+         accuracy                           0.93        83
+        macro avg       0.95      0.82      0.85        83
+     weighted avg       0.93      0.93      0.92        83
+
+CONFUSION MATRIX
+------------------------------------------------------------
+Clases: ['BUENA' 'CRITICA' 'EXCELENTE' 'REQUIERE_ATENCION']
+
+[[12  0  0  1]
+ [ 0  2  0  3]
+ [ 0  0  5  0]
+ [ 2  0  0 58]]
+
+TOP 10 FEATURES MAS IMPORTANTES
+------------------------------------------------------------
+       feature  importance
+      uph_real    0.575039
+    scrap_rate    0.151775
+disponibilidad    0.097249
+    inci_ratio    0.058987
+    prep_ratio    0.040585
+      dur_prep    0.019925
+ n_operaciones    0.019813
+      dur_prod    0.018452
+      dur_inci    0.018174
+
+INTERPRETACION DE CLASES
+------------------------------------------------------------
+EXCELENTE: Disponibilidad >= 85%, Scrap <= 2%, UPH >= 100
+BUENA: Disponibilidad >= 70%, Scrap <= 5%, UPH >= 60
+CRITICA: Disponibilidad < 50% o Scrap > 10%
+REQUIERE_ATENCION: Metricas por debajo de los objetivos

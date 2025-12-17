@@ -26,53 +26,130 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
     with st.container():
         render_kpi_cards(oee_data)
 
+    # Información de rendimiento (debug)
+    with st.expander("Informacion de calculo de rendimiento"):
+        st.markdown("**Metodo de calculo**: Basado en tiempo de ciclo real vs objetivo (percentil 25 historico)")
+
+        col_d1, col_d2, col_d3, col_d4 = st.columns(4)
+
+        uph_real = oee_data.get("uph_real", np.nan)
+        uph_teorico = oee_data.get("uph_teorico", np.nan)
+        actual_output = oee_data.get("actual_output", 0)
+        ideal_output = oee_data.get("ideal_output", 0)
+        performance = oee_data.get("performance", np.nan)
+
+        # Calcular tiempos de ciclo equivalentes
+        cycle_time_real = (3600 / uph_real) if pd.notna(uph_real) and uph_real > 0 else np.nan
+        cycle_time_teorico = (3600 / uph_teorico) if pd.notna(uph_teorico) and uph_teorico > 0 else np.nan
+
+        col_d1.metric("UPH Real", f"{uph_real:.1f}" if pd.notna(uph_real) else "N/A",
+                     help=f"Tiempo de ciclo: {cycle_time_real:.1f} seg/pieza" if pd.notna(cycle_time_real) else "N/A")
+        col_d2.metric("UPH Objetivo", f"{uph_teorico:.1f}" if pd.notna(uph_teorico) else "N/A",
+                     help=f"Tiempo de ciclo objetivo: {cycle_time_teorico:.1f} seg/pieza" if pd.notna(cycle_time_teorico) else "N/A")
+        col_d3.metric("Piezas Reales", f"{actual_output:,.0f}")
+        col_d4.metric("Piezas Ideales", f"{ideal_output:,.0f}")
+
+        st.markdown("---")
+
+        col_info1, col_info2 = st.columns(2)
+
+        with col_info1:
+            if pd.notna(cycle_time_real) and pd.notna(cycle_time_teorico):
+                st.markdown(f"""
+                **Tiempo de ciclo promedio ponderado**:
+                - Real: **{cycle_time_real:.1f} seg/pieza**
+                - Objetivo: **{cycle_time_teorico:.1f} seg/pieza**
+                - Diferencia: **{(cycle_time_real - cycle_time_teorico):.1f} seg/pieza**
+                """)
+
+        with col_info2:
+            if pd.notna(performance):
+                if performance > 1.0:
+                    st.success(f"**Rendimiento: {performance:.1%}**\n\nSuperando objetivo (Excelente)")
+                elif performance >= 0.90:
+                    st.success(f"**Rendimiento: {performance:.1%}**\n\nExcelente desempeno")
+                elif performance >= 0.80:
+                    st.info(f"**Rendimiento: {performance:.1%}**\n\nBuen desempeno")
+                elif performance >= 0.60:
+                    st.warning(f"**Rendimiento: {performance:.1%}**\n\nMejorable")
+                else:
+                    st.error(f"**Rendimiento: {performance:.1%}**\n\nBajo rendimiento")
+            else:
+                st.warning("No hay suficientes datos para calcular el rendimiento")
+
+        st.markdown("---")
+        st.caption("El objetivo se calcula usando el percentil 25 de los tiempos de ciclo historicos por maquina y referencia. Esto representa un objetivo ambicioso pero alcanzable basado en los mejores desempenos pasados.")
+
     # Gráfico de evolución temporal del OEE
     st.markdown("---")
-    st.markdown("### 📈 Evolución Temporal del OEE")
+    st.markdown("### Evolucion Temporal del OEE")
     daily_oee = compute_oee_daily(prod, ciclos)
     if not daily_oee.empty:
         col_ev1, col_ev2 = st.columns(2)
 
-        # Gráfico de OEE diario
-        fig_oee_trend = px.line(
-            daily_oee,
-            x="fecha",
-            y="oee",
-            markers=True,
-            title="OEE Diario",
-            labels={"oee": "OEE", "fecha": "Fecha"}
-        )
-        fig_oee_trend.add_hline(y=0.75, line_dash="dash", line_color="green", annotation_text="Objetivo 75%")
-        fig_oee_trend.update_traces(line_color="#3b82f6", line_width=3)
-        fig_oee_trend.update_layout(yaxis_tickformat=".0%", yaxis_range=[0, 1])
-        col_ev1.plotly_chart(fig_oee_trend, width='stretch')
+        # Filtrar NaN y asegurar que fecha sea del tipo correcto
+        daily_oee_clean = daily_oee.dropna(subset=["oee"]).copy()
 
-        # Gráfico de componentes del OEE
-        daily_melted = daily_oee.melt(
-            id_vars=["fecha"],
-            value_vars=["availability", "performance", "quality"],
-            var_name="componente",
-            value_name="valor"
-        )
-        daily_melted["componente"] = daily_melted["componente"].map({
-            "availability": "Disponibilidad",
-            "performance": "Rendimiento",
-            "quality": "Calidad"
-        })
-        fig_components = px.line(
-            daily_melted,
-            x="fecha",
-            y="valor",
-            color="componente",
-            markers=True,
-            title="Componentes del OEE (Diario)",
-            labels={"valor": "Valor", "fecha": "Fecha", "componente": "Componente"}
-        )
-        fig_components.update_layout(yaxis_tickformat=".0%", yaxis_range=[0, 1])
-        col_ev2.plotly_chart(fig_components, width='stretch')
+        if not daily_oee_clean.empty:
+            # Gráfico de OEE diario
+            fig_oee_trend = px.line(
+                daily_oee_clean,
+                x="fecha",
+                y="oee",
+                markers=True,
+                title="OEE Diario",
+                labels={"oee": "OEE", "fecha": "Fecha"}
+            )
+            fig_oee_trend.add_hline(y=0.75, line_dash="dash", line_color="green", annotation_text="Objetivo 75%")
+            fig_oee_trend.update_traces(
+                line_color="#3b82f6",
+                line_width=3,
+                marker=dict(size=8, line=dict(width=2, color="white"))
+            )
+            fig_oee_trend.update_layout(
+                yaxis_tickformat=".0%",
+                yaxis_range=[0, 1],
+                hovermode='x unified'
+            )
+            col_ev1.plotly_chart(fig_oee_trend, width='stretch')
+
+            # Gráfico de componentes del OEE
+            daily_melted = daily_oee_clean.melt(
+                id_vars=["fecha"],
+                value_vars=["availability", "performance", "quality"],
+                var_name="componente",
+                value_name="valor"
+            )
+            daily_melted["componente"] = daily_melted["componente"].map({
+                "availability": "Disponibilidad",
+                "performance": "Rendimiento",
+                "quality": "Calidad"
+            })
+            # Filtrar NaN en los valores
+            daily_melted = daily_melted.dropna(subset=["valor"])
+
+            fig_components = px.line(
+                daily_melted,
+                x="fecha",
+                y="valor",
+                color="componente",
+                markers=True,
+                title="Componentes del OEE (Diario)",
+                labels={"valor": "Valor", "fecha": "Fecha", "componente": "Componente"}
+            )
+            fig_components.update_traces(line_width=2, marker=dict(size=6))
+            fig_components.update_layout(
+                yaxis_tickformat=".0%",
+                yaxis_range=[0, 1],
+                hovermode='x unified'
+            )
+            col_ev2.plotly_chart(fig_components, width='stretch')
+        else:
+            col_ev1.warning("No hay datos válidos de OEE para graficar")
+            col_ev2.warning("No hay datos válidos de componentes OEE para graficar")
 
     st.markdown("---")
-    st.markdown("### 📊 Análisis Detallado")
+    st.markdown("### Analisis Detallado")
 
     # Gráfico Waterfall de pérdidas OEE
     col_w1, col_w2, col_w3 = st.columns([2, 1, 1])
@@ -250,7 +327,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
         )
 
     st.markdown("---")
-    st.markdown("### 🔥 Heatmap de Disponibilidad por Máquina")
+    st.markdown("### Heatmap de Disponibilidad por Maquina")
 
     # Calcular disponibilidad por máquina y día
     if recurso_sel == "(Todos)":
@@ -306,7 +383,7 @@ def page_dashboard(filtered: dict, ciclos: pd.DataFrame, recurso_sel: str) -> No
         st.info("El heatmap de disponibilidad solo se muestra cuando se seleccionan todas las máquinas.")
 
     st.markdown("---")
-    st.markdown("### ⏰ Análisis por Turno")
+    st.markdown("### Analisis por Turno")
 
     # Calcular OEE por turno
     if "turno" in prod.columns:

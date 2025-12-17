@@ -8,12 +8,46 @@ from sklearn.preprocessing import StandardScaler
 
 
 def page_clustering(filtered: dict, ciclos: pd.DataFrame) -> None:
-    st.subheader("Clustering de Máquinas")
-    st.markdown(
-        "Agrupamos las máquinas en clusters según sus métricas de rendimiento: "
-        "disponibilidad, % de scrap, UPH real y duraciones. "
-        "Esto ayuda a identificar perfiles de máquinas similares y detectar outliers."
-    )
+    st.title("Analisis de Clustering de Maquinas")
+
+    # Sección informativa
+    st.markdown("""
+    ## Que es el Clustering?
+
+    El **clustering** es una tecnica de Machine Learning no supervisado que agrupa maquinas
+    con caracteristicas similares. Esto permite:
+
+    - Identificar **patrones de comportamiento** entre maquinas
+    - Detectar **maquinas excepcionales** (mejores o peores performers)
+    - Agrupar maquinas por **perfil de rendimiento**
+    - Facilitar **decisiones de mantenimiento** y mejora
+    """)
+
+    with st.expander("Ver metodologia y metricas utilizadas"):
+        st.markdown("""
+        ### Metricas Analizadas
+
+        El algoritmo K-Means agrupa las maquinas basandose en:
+
+        1. **Disponibilidad**: % de tiempo en produccion vs tiempo total
+        2. **Scrap Rate**: % de piezas defectuosas sobre total producido
+        3. **UPH Real**: Unidades producidas por hora (ritmo de produccion)
+        4. **Duracion Produccion**: Minutos totales en estado productivo
+
+        ### Proceso de Clustering
+
+        1. Se normalizan las metricas (StandardScaler) para que todas tengan el mismo peso
+        2. Se aplica K-Means con el numero de clusters seleccionado
+        3. Se asigna cada maquina al cluster mas cercano segun sus caracteristicas
+
+        ### Interpretacion de Resultados
+
+        - **Cluster con alta disponibilidad y bajo scrap**: Maquinas de referencia
+        - **Cluster con baja disponibilidad**: Requiere atencion en mantenimiento
+        - **Cluster con alto scrap**: Problemas de calidad o ajustes
+        """)
+
+    st.markdown("---")
 
     prod = filtered.get("produccion", pd.DataFrame())
     

@@ -216,6 +216,6 @@ def page_rrhh(filtered: dict, prod: pd.DataFrame) -> None:
                 "horas_netas": "{:,.0f}",
                 "horas_prod": "{:,.0f}",
                 "pct_uso": "{:.1%}"
-            }), 
+            }),
             width='stretch'
         )

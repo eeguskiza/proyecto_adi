@@ -1,0 +1,18 @@
+duracion_min
+hora_del_dia
+dia_semana
+ref_frequency
+estado_incidencia
+estado_preparacion
+estado_produccion
+machine_CURVADORA
+machine_Granalladora Sthick
+machine_Horno Arrola
+machine_Linea Luk 4
+machine_PRENSA
+machine_Prensa518
+machine_SOLDADORA
+machine_Talladora CNC 48
+machine_Temple154
+machine_Temple19
+machine_otras

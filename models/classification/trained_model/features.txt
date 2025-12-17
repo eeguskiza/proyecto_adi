@@ -1,0 +1,9 @@
+disponibilidad
+scrap_rate
+uph_real
+dur_prod
+dur_prep
+dur_inci
+prep_ratio
+inci_ratio
+n_operaciones

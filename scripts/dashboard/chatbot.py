@@ -278,12 +278,12 @@ def render_chatbot_bubble(data_dict: Dict[str, Any], current_page: str, filtros:
 
         # Botón para activar/desactivar chatbot
         if not st.session_state.chatbot_active:
-            if st.button("🤖 Activar Asistente IA", use_container_width=True, type="primary", key="activate_chatbot"):
+            if st.button("🤖 Activar Asistente IA", width='stretch', type="primary", key="activate_chatbot"):
                 st.session_state.chatbot_active = True
                 st.session_state.initializing = True
                 st.rerun()
         else:
-            if st.button("❌ Cerrar Asistente", use_container_width=True, key="deactivate_chatbot"):
+            if st.button("❌ Cerrar Asistente", width='stretch', key="deactivate_chatbot"):
                 st.session_state.chatbot_active = False
                 st.session_state.chatbot_initialized = False
                 st.session_state.chatbot = None
@@ -352,7 +352,7 @@ def render_chatbot_bubble(data_dict: Dict[str, Any], current_page: str, filtros:
                             st.markdown(f"**🤖 Asistente:**")
                             st.success(msg['content'])
 
-                if st.button("🗑️ Limpiar historial", use_container_width=True):
+                if st.button("🗑️ Limpiar historial", width='stretch'):
                     st.session_state.chat_messages = []
                     st.session_state.chatbot.reset_conversation()
                     st.rerun()
@@ -367,7 +367,7 @@ def render_chatbot_bubble(data_dict: Dict[str, Any], current_page: str, filtros:
                 key="chat_input_sidebar"
             )
 
-            if st.button("📤 Enviar pregunta", use_container_width=True, type="primary", key="send_chat"):
+            if st.button("📤 Enviar pregunta", width='stretch', type="primary", key="send_chat"):
                 if user_input:
                     # Añadir mensaje del usuario
                     st.session_state.chat_messages.append({
@@ -394,11 +394,11 @@ def render_chatbot_bubble(data_dict: Dict[str, Any], current_page: str, filtros:
 
             # Sugerencias rápidas
             with st.expander("💡 Preguntas rápidas"):
-                if st.button("Estado general de producción", use_container_width=True, key="q1"):
+                if st.button("Estado general de producción", width='stretch', key="q1"):
                     st.session_state.quick_question = "¿Cuál es el estado general de la producción?"
-                if st.button("Máquina con peor rendimiento", use_container_width=True, key="q2"):
+                if st.button("Máquina con peor rendimiento", width='stretch', key="q2"):
                     st.session_state.quick_question = "¿Qué máquina tiene el peor rendimiento?"
-                if st.button("Explicar qué es el OEE", use_container_width=True, key="q3"):
+                if st.button("Explicar qué es el OEE", width='stretch', key="q3"):
                     st.session_state.quick_question = "Explícame qué es el OEE y cómo se calcula"
 
             # Procesar pregunta rápida si existe

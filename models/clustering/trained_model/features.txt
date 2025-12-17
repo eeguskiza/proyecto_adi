@@ -1,0 +1,4 @@
+disponibilidad
+scrap_rate
+uph_real
+dur_prod

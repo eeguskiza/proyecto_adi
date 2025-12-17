@@ -1,0 +1,43 @@
+============================================================
+REPORTE DE ENTRENAMIENTO - REGRESION DE SCRAP
+============================================================
+
+Fecha: 2025-12-17 12:15:51
+Modelo: Random Forest Regressor
+Target: Scrap Rate (tasa de piezas defectuosas)
+
+METRICAS DE EVALUACION
+------------------------------------------------------------
+MAE (Mean Absolute Error):     0.0319
+RMSE (Root Mean Squared Error): 0.1127
+R² Score:                       0.3264
+
+INTERPRETACION:
+- En promedio, el modelo se equivoca en 3.19% al predecir scrap
+- El modelo explica 32.6% de la varianza en scrap rate
+
+TOP 15 FEATURES MAS IMPORTANTES
+------------------------------------------------------------
+                    feature  importance
+               duracion_min    0.249117
+           machine_Temple19    0.163300
+          estado_produccion    0.128721
+              ref_frequency    0.123643
+               hora_del_dia    0.118055
+         estado_preparacion    0.079057
+                 dia_semana    0.042070
+          machine_CURVADORA    0.036688
+              machine_otras    0.034809
+          machine_Temple154    0.016169
+        machine_Linea Luk 4    0.002400
+          machine_SOLDADORA    0.001851
+          machine_Prensa518    0.001293
+             machine_PRENSA    0.001230
+machine_Granalladora Sthick    0.000717
+
+ESTADISTICAS DE PREDICCIONES
+------------------------------------------------------------
+Scrap real promedio:      0.0256 (2.56%)
+Scrap predicho promedio:  0.0243 (2.43%)
+Scrap real min/max:       0.0000 / 1.0000
+Scrap predicho min/max:   0.0000 / 0.9533
